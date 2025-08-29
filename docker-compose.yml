@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: demo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: demo
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"        # если порт занят, поменяй слева на 5433:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # опционально: положишь SQL/скрипты и они выполнятся при первом старте
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # удобно иметь pgAdmin (веб‑UI) — опционально
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: demo-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  db-data:
