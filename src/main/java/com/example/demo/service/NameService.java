@@ -21,20 +21,34 @@ public class NameService {
         int total = allUsers.size();
         int removed = 0;
 
-        for (User user : allUsers) {
+        long skippedNull = allUsers.stream()
+                .filter(user -> user.getName() == null)
+                .peek(user -> log.warn("Пропущен пользователь с NULL именем (id={})", user.getId()))
+                .count();
+
+        var usersToDelete = allUsers.stream()
+                .filter(user -> user.getName() != null && user.getName().length() < 3)
+                .toList();
+        usersToDelete.forEach(u -> {
+            userRepository.delete(u);
+            log.info("Удален пользователь: id={}, name={}", u.getId(), u.getName());
+        });
+        removed = usersToDelete.size();
+
+        /*for (User user : allUsers) {
             String name = user.getName();
             if (name == null) {
-                log.warn("⚠ Пропущен пользователь с NULL именем (id=" + user.getId() + ")");
+                log.warn("Пропущен пользователь с NULL именем (id={})", user.getId());
                 continue;
             }
 
             if (name.length() < 3) {
                 userRepository.delete(user);
                 removed++;
-                log.info("🗑 Удалён пользователь: id=" + user.getId() + ", name=" + name);
+                log.info("Удалён пользователь: id={},name={}", user.getId(), name);
             }
-        }
+        }*/
 
-        log.info("✅ Проверка завершена: всего=" + total + ", удалено=" + removed + ", осталось=" + (total - removed));
+        log.info("Проверка завершена: всего=" + total + ", удалено=" + removed + ", осталось=" + (total - removed));
     }
 }

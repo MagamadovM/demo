@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 1
-      author: demo
+      author: magamadov movldi
       preConditions:
         onFail: MARK_RAN
         not:
